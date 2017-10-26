@@ -1,0 +1,13 @@
+{
+  "resourceGroup": "pcf-pov-sb-provisioned",
+  "location": "westeurope",
+  "cacheName": "pdok-connector",
+  "parameters": {
+    "enableNonSslPort": false,
+    "sku": {
+      "name": "Basic",
+      "family": "C",
+      "capacity": 0
+    }
+  }
+}

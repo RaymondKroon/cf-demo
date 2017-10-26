@@ -1,0 +1,9 @@
+[{"name": "gml_to_featured","retryCount":0, "timeoutSeconds": 3600, "retryDelaySeconds": 15, "retryLogic": "FIXED", "timeoutPolicy": "RETRY"},
+  {"name": "featured","retryCount":0, "timeoutSeconds": 1800, "retryDelaySeconds": 15, "retryLogic": "FIXED", "timeoutPolicy": "RETRY"},
+  {"name": "featured_to_geoserver","retryCount":0, "timeoutSeconds": 1800, "retryDelaySeconds": 15, "retryLogic": "FIXED", "timeoutPolicy": "RETRY"},
+  {"name": "create_schema_for_update","retryCount":0},
+  {"name": "execute_sql","retryCount":0},
+  {"name": "task_split","retryCount":0},
+  {"name": "task_fork","retryCount":0},
+  {"name": "task_join","retryCount":0}
+]

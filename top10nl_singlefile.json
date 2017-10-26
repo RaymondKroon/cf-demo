@@ -1,0 +1,72 @@
+{
+  "name": "top10nl_singlefile",
+  "description": "Load top10nl file",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "gml_to_featured",
+      "taskReferenceName": "transform_gml",
+      "inputParameters": {
+        "dataset": "${workflow.input.dataset}",
+        "validity": "${workflow.input.validity}",
+        "mapping_uri": "${workflow.input.mapping_uri}",
+        "uri": "${workflow.input.uri}"
+      },
+      "type": "SIMPLE"
+    },
+    {
+      "name": "task_split",
+      "taskReferenceName": "split_gml_files",
+      "inputParameters": {
+        "dataset": "${workflow.input.dataset}",
+        "files": "${transform_gml.output.files}",
+        "queryExpression": ".files as $files | .dataset as $ds | $files | map({ (\"featured_\" + .name): (. + {dataset: $ds}) }) | reduce .[] as $i ({};.+$i) | { \"tasks\": $files | map({ \"name\": \"featured\", \"taskReferenceName\": (\"featured_\" + .name), \"type\": \"SIMPLE\" }), \"inputs\": . }"
+      },
+      "type": "JSON_JQ_TRANSFORM"
+    },
+    {
+      "name": "task_fork",
+      "taskReferenceName": "fork_featured",
+      "inputParameters": {
+        "inputs": "${split_gml_files.output.result.inputs}",
+        "tasks": "${split_gml_files.output.result.tasks}"
+      },
+      "type": "FORK_JOIN_DYNAMIC",
+      "dynamicForkTasksParam": "tasks",
+      "dynamicForkTasksInputParamName": "inputs"
+    },
+    {
+      "name": "task_join",
+      "taskReferenceName": "join_changelogs",
+      "type": "JOIN"
+    },
+    {
+      "name": "task_split",
+      "taskReferenceName": "split_changelogs",
+      "inputParameters": {
+        "dataset": "${workflow.input.dataset}",
+        "files": "${join_changelogs.output..files}",
+        "queryExpression": ".dataset as $ds | .files | flatten | . as $files | $files | map({ (\"featured_to_geoserver_\" + .name): (. + {dataset: $ds}) }) | reduce .[] as $i ({};.+$i) | { \"tasks\": $files | map({ \"name\": \"featured_to_geoserver\", \"taskReferenceName\": (\"featured_to_geoserver_\" + .name), \"type\": \"SIMPLE\" }), \"inputs\": . }"
+      },
+      "type": "JSON_JQ_TRANSFORM"
+    },
+    {
+      "name": "task_fork",
+      "taskReferenceName": "fork_featured_to_geoserver",
+      "inputParameters": {
+        "inputs": "${split_changelogs.output.result.inputs}",
+        "tasks": "${split_changelogs.output.result.tasks}"
+      },
+      "type": "FORK_JOIN_DYNAMIC",
+      "dynamicForkTasksParam": "tasks",
+      "dynamicForkTasksInputParamName": "inputs"
+    },
+    {
+      "name": "task_join",
+      "taskReferenceName": "join_featured_to_geoserver",
+      "type": "JOIN"
+    }
+  ],
+  "outputParameters": {},
+  "schemaVersion": 2
+}

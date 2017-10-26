@@ -1,0 +1,6 @@
+{
+  "dataset": "top10nl",
+  "validity": "2017-10-23T00:00:00.000",
+  "mapping_uri": "https://transformstorage.blob.core.windows.net/mappings/top10gmltofeaturedmapping.edn",
+  "uri": "https://transformstorage.blob.core.windows.net/top10nl/Top10NL_000001.gml.zip"
+}

@@ -1,0 +1,72 @@
+{
+    "name": "top10nl_multifile",
+    "description": "Load top10nl multiple files parallel",
+    "version": 1,
+    "tasks": [
+      {
+        "name": "create_schema_for_update",
+        "taskReferenceName": "create_schema_for_update",
+        "inputParameters": {
+          "dataset": "${workflow.input.dataset}"
+        },
+        "type": "SIMPLE"
+      },
+      {
+        "name": "execute_sql",
+        "taskReferenceName": "create_tables",
+        "inputParameters": {
+          "file": "https://transformstorage.blob.core.windows.net/sql/top10nlv2.sql",
+          "schema": "${create_schema_for_update.output.schema}"
+        },
+        "type": "SIMPLE"
+      },
+      {
+        "name": "execute_sql",
+        "taskReferenceName": "create_index",
+        "inputParameters": {
+          "file": "https://transformstorage.blob.core.windows.net/sql/createindex.sql",
+          "schema": "${create_schema_for_update.output.schema}"
+        },
+        "type": "SIMPLE"
+      },
+      {
+        "name": "execute_sql",
+        "taskReferenceName": "create_views",
+        "inputParameters": {
+          "file": "https://transformstorage.blob.core.windows.net/sql/createviews.sql",
+          "schema": "${create_schema_for_update.output.schema}"
+        },
+        "type": "SIMPLE"
+      },
+      {
+        "name": "task_split",
+        "taskReferenceName": "split_input",
+        "inputParameters": {
+          "dataset": "${create_schema_for_update.output.schema}",
+          "validity": "${workflow.input.validity}",
+          "mapping_uri": "${workflow.input.mapping_uri}",
+          "files": "${workflow.input.files}",
+          "queryExpression": ".files as $files | .dataset as $ds | .validity as $validity | .mapping_uri as $mapping | $files | map({ (\"top10nl_singlefile_\" + .name): (. + {dataset: $ds, validity: $validity, mapping_uri: $mapping}) }) | reduce .[] as $i ({};.+$i) | { \"tasks\": $files | map({ \"name\": \"top10nl_singlefile\", \"taskReferenceName\": (\"top10nl_singlefile_\" + .name), \"type\": \"SUB_WORKFLOW\", \"subWorkflowParam\": {\"name\": \"top10nl_singlefile\", \"version\": 1 } }), \"inputs\": . }"
+        },
+         "type": "JSON_JQ_TRANSFORM"
+     },
+      {
+        "name": "task_fork",
+        "taskReferenceName": "fork_unzip",
+        "inputParameters": {
+          "inputs": "${split_input.output.result.inputs}",
+          "tasks": "${split_input.output.result.tasks}"
+        },
+        "type": "FORK_JOIN_DYNAMIC",
+        "dynamicForkTasksParam": "tasks",
+        "dynamicForkTasksInputParamName": "inputs"
+      },
+      {
+        "name": "task_join",
+        "taskReferenceName": "task_join",
+        "type": "JOIN"
+      }
+    ],
+  "outputParameters": {},
+  "schemaVersion": 2
+}
